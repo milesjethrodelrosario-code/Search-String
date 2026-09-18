@@ -261,7 +261,7 @@
     }
     .empty-state strong { color: var(--ink); display: block; margin-bottom: 6px; font-size: 14px; }
 
-    /* clustered action bar */
+    /* platform icon row */
     .action-bar {
         position: sticky;
         top: 0;
@@ -269,37 +269,38 @@
         padding: 4px 0 14px;
         z-index: 5;
     }
-    .cluster { margin-bottom: 10px; }
-    .cluster-label {
+    .platform-icon-row {
         display: flex;
         align-items: center;
-        gap: 7px;
-        font-size: 10.5px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.6px;
-        color: var(--slate);
-        margin-bottom: 6px;
+        gap: 12px;
+        flex-wrap: wrap;
     }
-    .cluster-label .rail { width: 9px; height: 9px; border-radius: 2px; flex-shrink: 0; }
-    .cluster.social .rail { background: var(--social); }
-    .cluster.visual .rail { background: var(--visual); }
-    .cluster.pro .rail { background: var(--pro); }
-    .cluster-buttons { display: flex; flex-wrap: wrap; gap: 7px; }
-    .cluster-buttons button {
+    .platform-icon-btn {
+        width: 42px;
+        height: 42px;
+        flex-shrink: 0;
+        border-radius: 10px;
         border: 1.5px solid var(--line);
         background: var(--card);
-        color: var(--ink);
-        font-size: 11.5px;
-        font-weight: 700;
-        letter-spacing: 0.2px;
-        padding: 7px 13px;
-        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
+        padding: 0;
+        transition: border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
     }
-    .cluster.social .cluster-buttons button:hover { background: var(--social); color: white; border-color: var(--social); }
-    .cluster.visual .cluster-buttons button:hover { background: var(--visual); color: white; border-color: var(--visual); }
-    .cluster.pro .cluster-buttons button:hover { background: var(--pro); color: white; border-color: var(--pro); }
+    .platform-icon-btn:hover {
+        border-color: var(--signal);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 10px rgba(36, 82, 232, 0.15);
+    }
+    .platform-icon-btn img { width: 22px; height: 22px; object-fit: contain; }
+    .platform-icon-fallback {
+        font-size: 11px;
+        font-weight: 800;
+        color: var(--slate);
+        letter-spacing: 0.02em;
+    }
 
     .filter-row {
         display: flex;
@@ -560,35 +561,20 @@ const ORIGINAL_DOCUMENT_HTML = document.documentElement.outerHTML;
    PLATFORM DEFINITIONS
    ========================================================= */
 
-const CLUSTERS = [
-    {
-        key: 'social', group: 'full', label: 'Social Search', cssClass: 'social',
-        platforms: [
-            { label: 'Facebook', key: 'Facebook' },
-            { label: 'Twitter / X', key: 'X / Twitter' },
-            { label: 'YouTube', key: 'YouTube' },
-            { label: 'Google', key: 'Google' }
-        ]
-    },
-    {
-        key: 'visual', group: 'groupB', label: 'Visual & Lifestyle', cssClass: 'visual',
-        platforms: [
-            { label: 'Instagram', key: 'Instagram' },
-            { label: 'TikTok', key: 'TikTok' },
-            { label: 'Pinterest', key: 'Pinterest' },
-            { label: 'Strava', key: 'Strava' },
-            { label: 'Foursquare', key: 'Foursquare' },
-            { label: 'Tumblr', key: 'Tumblr' }
-        ]
-    },
-    {
-        key: 'pro', group: 'groupC', label: 'Professional Lookup', cssClass: 'pro',
-        platforms: [
-            { label: 'LinkedIn', key: 'LinkedIn' },
-            { label: 'RocketReach', key: 'RocketReach' },
-            { label: 'SignalHire', key: 'SignalHire' }
-        ]
-    }
+const PLATFORM_LIST = [
+    { label: 'Facebook', key: 'Facebook', group: 'full', slug: 'facebook' },
+    { label: 'Instagram', key: 'Instagram', group: 'groupB', slug: 'instagram' },
+    { label: 'Twitter / X', key: 'X / Twitter', group: 'full', slug: 'x' },
+    { label: 'YouTube', key: 'YouTube', group: 'full', slug: 'youtube' },
+    { label: 'LinkedIn', key: 'LinkedIn', group: 'groupC', slug: 'linkedin' },
+    { label: 'TikTok', key: 'TikTok', group: 'groupB', slug: 'tiktok' },
+    { label: 'Pinterest', key: 'Pinterest', group: 'groupB', slug: 'pinterest' },
+    { label: 'Strava', key: 'Strava', group: 'groupB', slug: 'strava' },
+    { label: 'Foursquare', key: 'Foursquare', group: 'groupB', slug: 'foursquare' },
+    { label: 'Tumblr', key: 'Tumblr', group: 'groupB', slug: 'tumblr' },
+    { label: 'Google', key: 'Google', group: 'full', slug: 'google' },
+    { label: 'RocketReach', key: 'RocketReach', group: 'groupC', slug: 'rocketreach' },
+    { label: 'SignalHire', key: 'SignalHire', group: 'groupC', slug: 'signalhire' }
 ];
 
 const CATEGORY_ORDER = [
@@ -1167,9 +1153,7 @@ function exportToExcel(querySets, formData) {
     ws['!cols'] = [{ wch: 20 }, { wch: 65 }];
 
     // ---- Sheet 3: By Platform (one social media per column) ----
-    const platformColumns = CLUSTERS.flatMap(cluster =>
-        cluster.platforms.map(p => ({ label: p.label, key: p.key, rows: querySets[cluster.group] || [] }))
-    );
+    const platformColumns = PLATFORM_LIST.map(p => ({ label: p.label, key: p.key, rows: querySets[p.group] || [] }));
     const maxRows = platformColumns.reduce((max, c) => Math.max(max, c.rows.length), 0);
     const platRows = [platformColumns.map(c => c.label)];
     for (let r = 0; r < maxRows; r++) {
@@ -1210,30 +1194,35 @@ function renderResults(querySets, formData) {
         return;
     }
 
-    // action bar
+    // action bar — single horizontal row of platform icons
     const actionBar = document.createElement('div');
     actionBar.className = 'action-bar';
-    CLUSTERS.forEach(cluster => {
-        const wrap = document.createElement('div');
-        wrap.className = `cluster ${cluster.cssClass}`;
+    const iconRow = document.createElement('div');
+    iconRow.className = 'platform-icon-row';
+    PLATFORM_LIST.forEach(p => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'platform-icon-btn';
+        btn.title = `Copy every relevant line as a clickable ${p.label} search link`;
+        btn.setAttribute('aria-label', `Copy for ${p.label}`);
 
-        const label = document.createElement('div');
-        label.className = 'cluster-label';
-        label.innerHTML = `<span class="rail"></span>${cluster.label}`;
-        wrap.appendChild(label);
+        const img = document.createElement('img');
+        img.src = `https://cdn.simpleicons.org/${p.slug}`;
+        img.alt = p.label;
+        img.loading = 'lazy';
+        img.onerror = function () {
+            this.onerror = null;
+            const fallback = document.createElement('span');
+            fallback.className = 'platform-icon-fallback';
+            fallback.textContent = p.label.replace(/[^A-Za-z]/g, '').slice(0, 2).toUpperCase();
+            this.replaceWith(fallback);
+        };
 
-        const btnRow = document.createElement('div');
-        btnRow.className = 'cluster-buttons';
-        cluster.platforms.forEach(p => {
-            const btn = document.createElement('button');
-            btn.textContent = `Copy for ${p.label}`;
-            btn.title = `Copy every relevant line as a clickable ${p.label} search link`;
-            btn.addEventListener('click', () => copyCleanedList(querySets[cluster.group], p.key, p.label));
-            btnRow.appendChild(btn);
-        });
-        wrap.appendChild(btnRow);
-        actionBar.appendChild(wrap);
+        btn.appendChild(img);
+        btn.addEventListener('click', () => copyCleanedList(querySets[p.group], p.key, p.label));
+        iconRow.appendChild(btn);
     });
+    actionBar.appendChild(iconRow);
 
     // filter row
     const filterRow = document.createElement('div');
