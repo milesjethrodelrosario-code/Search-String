@@ -974,7 +974,7 @@ const PLATFORM_URL_BUILDERS = {
     'Tumblr': q => `https://www.tumblr.com/search/${encodeURIComponent(q)}`,
     'Google': q => `https://www.google.com/search?q=${encodeURIComponent(q)}&aqs=chrome..69i57.331j0j4&sourceid=chrome&ie=UTF-8`,
     'RocketReach': q => `https://rocketreach.co/person?start=1&pageSize=10&keyword=${encodeURIComponent(q)}&_rdc=1&_rdr`,
-    'SignalHire': () => `https://www.signalhire.com/candidates/d88d8fd45adc11e68155feb79ce8b6d8`,
+    'SignalHire': q => `https://www.signalhire.com/profiles/search?q=${encodeURIComponent(q)}`,
     'Foursquare': q => `https://www.foursquare.com/search?tab=pagesResults&query=${encodeURIComponent(q)}`
 };
 
